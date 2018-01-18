@@ -1,36 +1,43 @@
-# lets create a parent class for them called Component
-# now lets see the point of this parent class
+class Statistic:
+    def __init__(self, name, base_value, growth_value):
+        self.name = name
+        self.base_value = base_value
+        self.growth_value = growth_value
+        self.current_value = base_value
 
 
-class Component:
-    def __init__(self):
-        self.totalAttackSpeed = 0
+class Champion:
+    def __init__(self, name, stats):
+        self.name = name
+        self.statistics = {
+            'armor': Statistic('Armor',
+                               stats['armor'], stats['armorperlevel']),
+            'attackdamage': Statistic('AD',
+                                      stats['attackdamage'], stats['attackdamageperlevel']),
+            'attackspeed': Statistic('Attack speed',
+                                     self.base_attack_speed(stats['attackspeedoffset']), stats['attackspeedperlevel']),
+            'hp': Statistic('HP',
+                            stats['hp'], stats['hpperlevel']),
+            'hpregen': Statistic('HP/s',
+                                 stats['hpregen'], stats['hpregenperlevel']),
+            'mp': Statistic('MP',
+                            stats['mp'], stats['mpperlevel']),
+            'mpregen': Statistic('MP/s',
+                                 stats['mpregen'], stats['mpregenperlevel'])
+        }
 
     @staticmethod
-    def display():  # in fact , self cannot be omitted BUT when a function does not need
-        # any value of the object , whether attribute or method , you can decorate it with AND
-        # then ide lets you remove fucking self
-        print("i display a component")
-
-
-class Champion(Component):
-    def __init__(self):
-        super().__init__()
-        self.healthPoints = 100
+    def base_attack_speed(offset):
+        return 0.625 / (1 + offset)
 
     def display(self):
-        print("i display a champion who has " + str(self.healthPoints) + " HP")
+        for stat, value in self.statistics.items():
+            print(stat + ": " + str(value.base_value))
+        print("i display a champion who has " + str(self.statistics['armor'].current_value) + " armor")
 
 
-class Runes(Component):
+class Equipment:
     def __init__(self):
-        super().__init__()
-        self.effects = "press the attack shit"
-
-
-class Equipment(Component):
-    def __init__(self):
-        super().__init__()
         self.items = ["boots", "etc"]
 
 
