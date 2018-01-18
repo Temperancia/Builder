@@ -12,8 +12,7 @@ from gameplay import *
 class Build:
     def __init__(self):
         self.champion = Champion()
-        self.runes = Runes()
-        self.equipment = Equipment()s
+        self.equipment = Equipment()
 
 build = Build()
 print(build.champion.healthPoints)
