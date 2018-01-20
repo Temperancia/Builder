@@ -1,25 +1,55 @@
 from gameplay import *
-#cool!
-#1231ijijij
-# this was raw code without any architecture now we need to think about an actual structure for
-# our application
-# lets think about a "build" , something you choose with 3 things : a champion , a set of runes
-# and finally the items
-# we simply make 3 objects from classes we will further describe , in bigger projects
-# this conception phase is performed using UML to model relationships between classes
-# we are about to see inheritance that way
-# lets say that each of "build" is a "Component"
+import api
+import textwrap
+
+
 class Build:
     def __init__(self):
         self.champion = Champion()
         self.equipment = Equipment()
 
-build = Build()
-print(build.champion.healthPoints)
-print(build.champion.totalAttackSpeed)
-print(build.equipment.items[0])
-print(build.equipment.totalAttackSpeed)
-print(build.runes.effects)
-print(build.runes.totalAttackSpeed)
-build.equipment.display()
-build.champion.display()
+        self.champions = api.get_champions()
+        self.items = api.get_items()
+
+        self.select_champion()
+        self.select_items()
+
+    def display_choice(self, choices):
+        output = ''
+        for idx, choice in enumerate(choices.values()):
+            output += str(idx + 1) + ': ' + choice['name'] + '\t'
+        for line in textwrap.wrap(output, 120):
+            print(line)
+
+    def select_champion(self):
+        names = [champ['name'].lower() for champ in self.champions.values()]
+        while True:
+            # self.display_choice(self.champions)
+            selection = input("Select a champion : ")
+            if selection.isdigit() and 0 < int(selection) <= len(self.champions):
+                index = list(self.champions.keys())[int(selection) - 1]
+                break
+            elif selection.lower() in names:
+                index = list(self.champions.keys())[int(names.index(selection.lower()))]
+                break
+        self.champion = Champion(self.champions[index])
+
+    def select_items(self):
+        names = [item['name'].lower() for item in self.items.values()]
+        for iteration in range(6):
+            while True:
+                # self.display_choice(self.items)
+                if self.equipment.stuff:
+                    print('Current build : ')
+                    for build_item in self.equipment.stuff:
+                        print('\t' + build_item['name'])
+                selection = input('Select items (separate each by pressing enter) : ')
+                if selection.isdigit() and 0 < int(selection) <= len(self.items):
+                    index = list(self.items.keys())[int(selection) - 1]
+                    break
+                elif selection.lower() in names:
+                    index = list(self.items.keys())[int(names.index(selection.lower()))]
+                    break
+            item = self.items[index]
+            self.equipment.stuff.append(item)
+            self.champion.update(item)
