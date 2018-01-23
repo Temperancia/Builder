@@ -15,7 +15,7 @@ class Build:
         self.select_items()
 
     @staticmethod
-    def display_choice(choices):
+    def __display_choice(choices):
         output = ''
         for idx, choice in enumerate(choices.values()):
             output += str(idx + 1) + ': ' + choice['name'] + '\t'

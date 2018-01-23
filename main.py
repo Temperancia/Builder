@@ -9,7 +9,7 @@ def greetings():
 
 if __name__ == '__main__':
     greetings()
-    # build = build.Build()
+    build = build.Build()
     # duel = duel.Duel()
-    app = app.App()
-    app.run()
+    # app = app.App()
+    # app.run()

@@ -29,18 +29,23 @@ def get_champions():
         url = 'https://na1.api.riotgames.com/lol/static-data/v3/champions?tags=stats&tags=spells'
         __get_data_from_url(url, file_name)
     champions = __extract_from_json(file_name)
-    champions['FiddleSticks'] = champions.pop('Fiddlesticks')
+    champions['FiddleSticks'] = champions.pop('Fiddlesticks')  # interesting wrong key for fiddlesticks
+    # known issue from api
     return champions
 
 
+# does not contain rakan xayah ornn kayn zoe squares as most recent , although sknins and splasharts are available ...
 def get_champion_squares(champions):
     for key, value in champions.items():
-        url = 'http://ddragon.leagueoflegends.com/cdn/6.24.1/img/champion/' + key + '.png'
-        file = 'data/' + key + '.png'
-        try:
-            urllib.request.urlretrieve(url, file)
+        url = 'http://ddragon.leagueoflegends.com/cdn/6.24.1/img/champion/' + key + '.png'  # getting each
+        # champion with url
+        file = 'data/' + key + '.png'  # local file
+        try:  # exceptions allow us to handle if something goes wrong easily , it's a rather dumb way to prevent
+            # errors but it works often that way in python
+            urllib.request.urlretrieve(url, file)  # actual retrieving if not 404 or 403 + stores into local file
         except Exception:
-            continue
+            continue  # if goes wrong , still continue the loop above , aka goes next iteration , "next" in other
+            # languages
 
 
 def get_items():
