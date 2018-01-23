@@ -1,26 +1,23 @@
-class Statistic:
-    def __init__(self, name, base_value):
+class ChampionStatistic:
+    def __init__(self, name, base_value, growth_value):
         self.name = name
         self.base_value = base_value
-
-
-class ChampionStatistic(Statistic):
-    def __init__(self, name, base_value, growth_value):
-        super().__init__(name, base_value)
         self.growth_value = growth_value
         self.current_value = base_value
+        self.current_factor = 1
 
     def __iadd__(self, value):
         self.current_value += value
         return self
 
-class ItemStatistic(Statistic):
-    def __init__(self, name, base_value):
-        super().__init__(name, base_value)
+    def __imul__(self, value):
+        self.current_value += self.base_value * value
+        return self
 
 
 class Champion:
-    def __init__(self, champion=None):
+    def __init__(self, champion=None, level=1):
+        self.level = level
         if champion:
             self.name = champion['name']
             stats = champion['stats']
@@ -34,12 +31,18 @@ class Champion:
                 'attackspeed': ChampionStatistic('Attack speed',
                                                  self.base_attack_speed(stats['attackspeedoffset']),
                                                  stats['attackspeedperlevel']),
+                'crit': ChampionStatistic('% Crit',
+                                          stats['crit'],
+                                          stats['critperlevel']),
                 'hp': ChampionStatistic('HP',
                                         stats['hp'],
                                         stats['hpperlevel']),
                 'hpregen': ChampionStatistic('HP/s',
                                              stats['hpregen'],
                                              stats['hpregenperlevel']),
+                'magicdamage': ChampionStatistic('AP',
+                                                 0,
+                                                 0),
                 'movespeed': ChampionStatistic('MS',
                                                stats['movespeed'],
                                                0),
@@ -48,71 +51,86 @@ class Champion:
                                         stats['mpperlevel']),
                 'mpregen': ChampionStatistic('MP/s',
                                              stats['mpregen'],
-                                             stats['mpregenperlevel'])
+                                             stats['mpregenperlevel']),
+                'spellblock': ChampionStatistic('MR',
+                                                stats['spellblock'],
+                                                stats['spellblockperlevel'])
+            }
+            self.flat_convert_table = {
+                'FlatArmorMod': 'armor',
+                'FlatPhysicalDamageMod': 'attackdamage',
+                'FlatCritChanceMod': 'crit',
+                'FlatHPPoolMod': 'hp',
+                'FlatMagicDamageMod': 'magicdamage',
+                'FlatMovementSpeedMod': 'movespeed',
+                'FlatMPPoolMod': 'mp',
+                'FlatSpellBlockMod': 'spellblock'
+            }
+            self.regen_convert_table = {
+                'FlatHPRegenMod': 'hpregen',
+                'FlatMPRegen': 'mpregen'
+            }
+            self.percentage_convert_table = {
+                'PercentAttackSpeedMod': 'attackspeed'
             }
 
     @staticmethod
     def base_attack_speed(offset):
         return 0.625 / (1 + offset)
 
+    def set_level(self, level):
+        self.level = level
+        for key, value in self.statistics.items():
+            if key in self.flat_convert_table.values():
+                value.current_value += value.growth_value * (self.level - 1)
+            elif key in self.percentage_convert_table.values():
+                value.current_value += value.base_value * value.growth_value / 100 * (self.level - 1)
+
     def display(self):
+        print(self.name, 'level : ', self.level)
         for stat, value in self.statistics.items():
-            print(stat + ": " + str(value.current_value))
+            print(stat + ': ' + str(value.current_value) + ' ' + value.name)
+        print()
 
     def improve_stat(self, key, value):
-        if key == 'FlatArmorMod':
-            print(key, value)
-            self.statistics['armor'] += value
+        if key in self.flat_convert_table:
+            self.statistics[self.flat_convert_table[key]] += value
+        elif key in self.regen_convert_table:
+            self.statistics[self.regen_convert_table[key]] += value
+        elif key in self.percentage_convert_table:
+            self.statistics[self.percentage_convert_table[key]] *= value
 
     def update(self, item):
-        # self.display()
-        for key, value in item['stats'].items():
+        self.display()
+        for key, value in item.stats.items():
             self.improve_stat(key, value)
         self.display()
 
 
 class Item:
-    def __init__(self, name, stats):
-        self.name = name
-        print(stats)
+    def __init__(self, item):
+        self.name = item['name']
+        self.stats = item['stats']
+        self.parse(item['description'])
+
+    def parse(self, description):
+        found = description.find('Base Mana Regen')
+        if found != -1:
+            self.stats.update({'FlatMPRegen': float(description[found - 4:found - 2])})
 
     def display(self):
-        for stat, value in self.statistics.items():
-            print(stat + ": " + str(value.base_value))
-
-    def update(self):
-        pass
+        item = self.name + ': '
+        for stat, value in self.stats.items():
+            item += stat + ': ' + str(value) + '\t'
+        print(item)
 
 
 class Equipment:
     def __init__(self):
         self.stuff = []
-        # initiate a list of 6 None , will be our stuff we choose
-        # find on riot api the list of all the items , use my query in main.py
-        # make a function get_items() in main.py that will return you a dictionary of all the items
-        # quite similar to get_champions()
 
-        # make a new class "Item" which will encapsulate data from the dict like the "Statistic" class above
-        # so we can access them easily. Item class must contain ALL statistics so we will simply add all of them
-        # when we select an item in a generic way. Use the same statistics dictionary attribute to store them.
-        # constructor takes item dictionary
-        # eg of final usage : print(self.items['Void Staff'].statistics['armor'])
-        # or => item = self.items['Void Staff']
-        # print(item.statistics['armor'])
-
-        # make regularly tests with print to check data access and integrity
-
-        # make a function inside this class "add_item(item)" which adds item to the list
-        # of items here
-        # make a function "remove_item(name)" which will remove from the list of items the last item
-        # which has the given name
-
-        # update champion class by making function "update_equipment(equipment)" where you send
-        # an Equipment object and then modify current_value of each statistic thanks to each item stats
-
-        # we want our build to be shared between champions possibly so it means Equipment will be
-        # outside champion class and imported into each time we need to change stats via : add_item,
-        # remove_item
-    def add_item(self, item):
-        self.stuff.add(Item(item['name'], item['stats']))
+    def add_item(self, item, champion):
+        item = Item(item)
+        self.stuff.append(item)
+        champion.update(item)
 

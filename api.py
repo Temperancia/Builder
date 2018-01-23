@@ -1,12 +1,13 @@
 import requests
 import json
 import collections
+import urllib.request
 
 
 refreshChampions = False
 refreshItems = False
 params = (
-        ('api_key', 'RGAPI-728cb974-be95-4525-8abb-c8da7bfa91e1'),
+        ('api_key', 'RGAPI-f795ebb7-650a-4de7-ba96-4293ec59360f'),
     )
 
 
@@ -23,11 +24,23 @@ def __extract_from_json(file_name):
 
 
 def get_champions():
-    file_name = "rawData.json"
+    file_name = "champions.json"
     if refreshChampions:
-        url = 'https://na1.api.riotgames.com/lol/static-data/v3/champions?tags=stats'
+        url = 'https://na1.api.riotgames.com/lol/static-data/v3/champions?tags=stats&tags=spells'
         __get_data_from_url(url, file_name)
-    return __extract_from_json(file_name)
+    champions = __extract_from_json(file_name)
+    champions['FiddleSticks'] = champions.pop('Fiddlesticks')
+    return champions
+
+
+def get_champion_squares(champions):
+    for key, value in champions.items():
+        url = 'http://ddragon.leagueoflegends.com/cdn/6.24.1/img/champion/' + key + '.png'
+        file = 'data/' + key + '.png'
+        try:
+            urllib.request.urlretrieve(url, file)
+        except Exception:
+            continue
 
 
 def get_items():
