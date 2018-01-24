@@ -113,9 +113,9 @@ class Item:
         self.stats = item['stats']
         self.parse(item['description'])
 
-    def parse(self, description):
+    def parse(self, description):  # hp regen same issue
         found = description.find('Base Mana Regen')
-        if found != -1:
+        if not found == -1:
             self.stats.update({'FlatMPRegen': float(description[found - 4:found - 2])})
 
     def display(self):

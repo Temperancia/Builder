@@ -15,7 +15,7 @@ class Build:
         self.select_items()
 
     @staticmethod
-    def __display_choice(choices):
+    def display_choice(choices):
         output = ''
         for idx, choice in enumerate(choices.values()):
             output += str(idx + 1) + ': ' + choice['name'] + '\t'
@@ -30,7 +30,7 @@ class Build:
     def select_champion(self):
         names = [champ['name'].lower() for champ in self.champions.values()]
         while True:
-            self.__display_choice(self.champions)
+            self.display_choice(self.champions)
             selection = input("Select a champion : ")
             if selection.isdigit() and 0 < int(selection) <= len(self.champions):
                 index = list(self.champions.keys())[int(selection) - 1]

@@ -13,18 +13,18 @@ params = (
 
 def __get_data_from_url(url, file_name):
     json_content = requests.get(url, params=params)
-    received_file = open(file_name, "wb")
+    received_file = open(file_name, 'wb')
     received_file.write(json_content.content)
 
 
 def __extract_from_json(file_name):
-    json_file = open(file_name, "rb")
+    json_file = open(file_name, 'rb')
     response = json.loads(json_file.read())
     return collections.OrderedDict(sorted(response['data'].items(), key=lambda x: x[1]['name']))
 
 
 def get_champions():
-    file_name = "champions.json"
+    file_name = 'champions.json'
     if refreshChampions:
         url = 'https://na1.api.riotgames.com/lol/static-data/v3/champions?tags=stats&tags=spells'
         __get_data_from_url(url, file_name)
@@ -49,7 +49,7 @@ def get_champion_squares(champions):
 
 
 def get_items():
-    file_name = "items.json"
+    file_name = 'items.json'
     if refreshItems:
         url = 'https://na1.api.riotgames.com/lol/static-data/v3/items?tags=stats'
         __get_data_from_url(url, file_name)
