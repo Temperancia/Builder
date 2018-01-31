@@ -7,7 +7,7 @@ import urllib.request
 refreshChampions = False
 refreshItems = False
 params = (
-        ('api_key', 'RGAPI-f795ebb7-650a-4de7-ba96-4293ec59360f'),
+        ('api_key', 'RGAPI-711f59c8-08f8-46a7-a84c-057057c42163'),
     )
 
 
@@ -34,18 +34,24 @@ def get_champions():
     return champions
 
 
-# does not contain rakan xayah ornn kayn zoe squares as most recent , although sknins and splasharts are available ...
 def get_champion_squares(champions):
-    for key, value in champions.items():
-        url = 'http://ddragon.leagueoflegends.com/cdn/6.24.1/img/champion/' + key + '.png'  # getting each
-        # champion with url
-        file = 'data/' + key + '.png'  # local file
-        try:  # exceptions allow us to handle if something goes wrong easily , it's a rather dumb way to prevent
-            # errors but it works often that way in python
-            urllib.request.urlretrieve(url, file)  # actual retrieving if not 404 or 403 + stores into local file
+    for key in champions.keys():
+        url = 'http://ddragon.leagueoflegends.com/cdn/8.2.1/img/champion/' + key + '.png'
+        file = 'data/champion_squares/' + key + '.png'
+        try:
+            urllib.request.urlretrieve(url, file)
         except Exception:
-            continue  # if goes wrong , still continue the loop above , aka goes next iteration , "next" in other
-            # languages
+            continue
+
+
+def get_champion_loading_splash_arts(champions):
+    for key in champions.keys():
+        url = 'http://ddragon.leagueoflegends.com/cdn/img/champion/loading/' + key + '_0.jpg'
+        file = 'data/loading_splash_arts/' + key + '.jpg'
+        try:
+            urllib.request.urlretrieve(url, file)
+        except Exception:
+            continue
 
 
 def get_items():
@@ -54,3 +60,13 @@ def get_items():
         url = 'https://na1.api.riotgames.com/lol/static-data/v3/items?tags=stats'
         __get_data_from_url(url, file_name)
     return __extract_from_json(file_name)
+
+
+def get_items_squares(items):
+    for key in items.keys():
+        url = 'http://ddragon.leagueoflegends.com/cdn/8.2.1/img/item/' + key + '.png'
+        file = 'data/item_squares/' + key + '.png'
+        try:
+            urllib.request.urlretrieve(url, file)
+        except Exception:
+            continue

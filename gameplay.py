@@ -101,10 +101,10 @@ class Champion:
             self.statistics[self.percentage_convert_table[key]] *= value
 
     def update(self, item):
-        self.display()
+        # self.display()
         for key, value in item.stats.items():
             self.improve_stat(key, value)
-        self.display()
+        # self.display()
 
 
 class Item:
@@ -127,10 +127,16 @@ class Item:
 
 class Equipment:
     def __init__(self):
-        self.stuff = []
+        self.stuff = [None, None, None, None, None, None]
 
     def add_item(self, item, champion):
-        item = Item(item)
-        self.stuff.append(item)
-        champion.update(item)
+        for index, x in enumerate(self.stuff):
+            if not x:
+                self.stuff[index] = item
+                if champion:
+                    champion.update(item)
+                return index
+        return -1
 
+    def remove_item(self, index):
+        self.stuff[index] = None

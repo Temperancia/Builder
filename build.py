@@ -5,14 +5,11 @@ import textwrap
 
 class Build:
     def __init__(self):
-        self.champion = Champion()
+        self.champion = None
         self.equipment = Equipment()
 
         self.champions = api.get_champions()
         self.items = api.get_items()
-
-        self.select_champion()
-        self.select_items()
 
     @staticmethod
     def display_choice(choices):
@@ -49,7 +46,7 @@ class Build:
         names = [item['name'].lower() for item in self.items.values()]
         for iteration in range(6):
             while True:
-                self.__display_choice(self.items)
+                self.display_choice(self.items)
                 if self.equipment.stuff:
                     self.__display_build()
                 selection = input('Select items (separate each by pressing enter) : ')
@@ -61,3 +58,14 @@ class Build:
                     break
             item = self.items[index]
             self.equipment.add_item(item, self.champion)
+
+    # app functions
+
+    def set_champion(self, index):
+        self.champion = Champion(self.champions[index])
+
+    def add_item(self, index):
+        return self.equipment.add_item(Item(self.items[index]), self.champion)
+
+    def remove_item(self, index):
+        self.equipment.remove_item(index)

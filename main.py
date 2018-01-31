@@ -12,4 +12,3 @@ if __name__ == '__main__':
     # build = build.Build()
     # duel = duel.Duel()
     app = app.App()
-    app.run()
