@@ -10,13 +10,22 @@ class ChampionStatistic:
         self.current_value += value
         return self
 
+    def __isub__(self, value):
+        self.current_value -= value
+        return self
+
     def __imul__(self, value):
         self.current_value += self.base_value * value
         return self
 
+    def __itruediv__(self, value):
+        self.current_value -= self.base_value * value
+        return self
+
 
 class Champion:
-    def __init__(self, champion=None, level=1):
+    def __init__(self, key, champion=None, level=1):
+        self.key = key
         self.level = level
         if champion:
             self.name = champion['name']
@@ -100,15 +109,25 @@ class Champion:
         elif key in self.percentage_convert_table:
             self.statistics[self.percentage_convert_table[key]] *= value
 
-    def update(self, item):
-        # self.display()
+    def worsen_stat(self, key, value):
+        if key in self.flat_convert_table:
+            self.statistics[self.flat_convert_table[key]] -= value
+        elif key in self.regen_convert_table:
+            self.statistics[self.regen_convert_table[key]] -= value
+        elif key in self.percentage_convert_table:
+            self.statistics[self.percentage_convert_table[key]] /= value
+
+    def update(self, item, improve):
         for key, value in item.stats.items():
-            self.improve_stat(key, value)
-        # self.display()
+            if improve:
+                self.improve_stat(key, value)
+            else:
+                self.worsen_stat(key, value)
 
 
 class Item:
-    def __init__(self, item):
+    def __init__(self, key, item):
+        self.key = key
         self.name = item['name']
         self.stats = item['stats']
         self.parse(item['description'])
@@ -129,14 +148,22 @@ class Equipment:
     def __init__(self):
         self.stuff = [None, None, None, None, None, None]
 
+    def reset(self, champion):
+        for item in self.stuff:
+            if item:
+                champion.update(item, True)
+
     def add_item(self, item, champion):
         for index, x in enumerate(self.stuff):
             if not x:
                 self.stuff[index] = item
                 if champion:
-                    champion.update(item)
+                    champion.update(item, True)
                 return index
         return -1
 
-    def remove_item(self, index):
+    def remove_item(self, index, champion):
+        if champion:
+            champion.update(self.stuff[index], False)
         self.stuff[index] = None
+

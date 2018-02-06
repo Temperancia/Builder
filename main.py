@@ -1,5 +1,3 @@
-import build
-import duel
 import app
 
 
@@ -8,7 +6,4 @@ def greetings():
 
 
 if __name__ == '__main__':
-    greetings()
-    # build = build.Build()
-    # duel = duel.Duel()
     app = app.App()
