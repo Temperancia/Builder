@@ -6,6 +6,8 @@ import os
 import build
 import gameplay
 
+photos = []
+
 
 class ItemTree:
     def __init__(self, window, frame, map, modes):
@@ -14,7 +16,6 @@ class ItemTree:
         self.builder = window.builder
         self.build = window.build
         self.statistics = window.statistics
-        self.photos = []
         self.items = ttk.Treeview(frame, height=4, selectmode='browse', show='tree')
         self.items['columns'] = 'Name'
         self.items_scrollbar = ttk.Scrollbar(frame, command=self.items.yview)  # TODO debug scrollbar
@@ -31,7 +32,7 @@ class ItemTree:
             if not os.path.isfile(file):
                 continue
             photo = ImageTk.PhotoImage(Image.open(file))
-            self.photos.append(photo)
+            photos.append(photo)
 
             if value['maps'][map]:
                 if modes == 'all':
@@ -76,7 +77,7 @@ class ItemTree:
             file = 'data/item_squares/' + key + '.png'
             image = Image.open(file)
             photo = ImageTk.PhotoImage(image)
-            self.photos.append(photo)
+            photos.append(photo)
             self.build[index].configure(image=photo)
         if self.builder.champion:
             self.callback.update_stats()
@@ -85,7 +86,6 @@ class ItemTree:
 class DisplayWindow:
     def __init__(self, app):
         self.window = tkinter.Toplevel(app.app)
-        self.photos = []
 
         for index, window in enumerate(app.windows):
 
@@ -103,7 +103,7 @@ class DisplayWindow:
             image = Image.open(file)
             image = image.resize((165, 300), Image.ANTIALIAS)
             photo = ImageTk.PhotoImage(image)
-            self.photos.append(photo)
+            photos.append(photo)
             self.splash_art.configure(image=photo)
 
             for key, value in window.builder.champion.statistics.items():
@@ -115,7 +115,7 @@ class DisplayWindow:
             column = 0
             for item in window.builder.equipment.stuff:
                 photo = ImageTk.PhotoImage(Image.open('data/Inventory_slot_background.png'))
-                self.photos.append(photo)
+                photos.append(photo)
                 slot = tkinter.Label(self.build_frame, image=photo)
                 slot.grid(row=row, column=column, padx=10, pady=10, stick='N')
 
@@ -123,7 +123,7 @@ class DisplayWindow:
                     file = 'data/item_squares/' + item.key + '.png'
                     image = Image.open(file)
                     photo = ImageTk.PhotoImage(image)
-                    self.photos.append(photo)
+                    photos.append(photo)
                     label = tkinter.Label(self.build_frame, image=photo)
                     label.grid(row=row, column=column, padx=10, pady=10, sticky='N')
                 column += 1
@@ -140,7 +140,6 @@ class SelectionWindow:  # TODO current item tree
         for window in app.windows:  # TODO items selected
             self.previous_selections.append(window.builder.champion.key)
         self.builder = build.Build()
-        self.photos = []
 
         self.champions_frame = tkinter.Frame(self.window)
         self.splash_art_frame = tkinter.Frame(self.window)
@@ -173,7 +172,7 @@ class SelectionWindow:  # TODO current item tree
             if not os.path.isfile(file) or key in self.previous_selections:
                 continue
             photo = ImageTk.PhotoImage(Image.open(file))
-            self.photos.append(photo)
+            photos.append(photo)
             self.champions.insert('', 'end', open=True, values=(value['name'], key), image=photo)
 
         self.splash_art = tkinter.Label(self.splash_art_frame)
@@ -190,7 +189,7 @@ class SelectionWindow:  # TODO current item tree
         column = 0
         for i in range(6):
             photo = ImageTk.PhotoImage(Image.open('data/Inventory_slot_background.png'))
-            self.photos.append(photo)
+            photos.append(photo)
             slot = tkinter.Label(self.build_frame, image=photo)
             label = tkinter.Label(self.build_frame)
             label.number = i
@@ -224,7 +223,7 @@ class SelectionWindow:  # TODO current item tree
 
     def update_stats(self):
         for key, value in self.builder.champion.statistics.items():  # TODO round values
-            text = str(value.current_value) + ' ' + value.name
+            text = str(round(value.current_value, 2)) + ' ' + value.name
             self.statistics[key].configure(text=text)
 
     def pick_champion(self, event):
@@ -235,7 +234,7 @@ class SelectionWindow:  # TODO current item tree
         image = Image.open(file)
         image = image.resize((165, 300), Image.ANTIALIAS)
         photo = ImageTk.PhotoImage(image)
-        self.photos.append(photo)
+        photos.append(photo)
         self.splash_art.configure(image=photo)
         self.items.update_item_tree()
         self.update_stats()
