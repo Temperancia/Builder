@@ -85,8 +85,9 @@ class ItemTree:
 
 class DisplayWindow:
     def __init__(self, app):
+        self.callback = app
         self.window = tkinter.Toplevel(app.app)
-
+        self.window.protocol("WM_DELETE_WINDOW", app.quit)
         for index, window in enumerate(app.windows):
 
             self.splash_art_frame = tkinter.Frame(self.window)
@@ -107,7 +108,7 @@ class DisplayWindow:
             self.splash_art.configure(image=photo)
 
             for key, value in window.builder.champion.statistics.items():
-                text = str(value.current_value) + ' ' + value.name
+                text = str(round(value.current_value, 2)) + ' ' + value.name
                 label = tkinter.Label(self.stats_frame, text=text)
                 label.grid()
 
@@ -136,6 +137,7 @@ class SelectionWindow:  # TODO current item tree
     def __init__(self, app):
         self.callback = app
         self.window = tkinter.Toplevel(app.app)
+        self.window.protocol("WM_DELETE_WINDOW", app.quit)
         self.previous_selections = []
         for window in app.windows:  # TODO items selected
             self.previous_selections.append(window.builder.champion.key)
@@ -191,11 +193,11 @@ class SelectionWindow:  # TODO current item tree
             photo = ImageTk.PhotoImage(Image.open('data/Inventory_slot_background.png'))
             photos.append(photo)
             slot = tkinter.Label(self.build_frame, image=photo)
+            slot.grid(row=row, column=column, padx=10, pady=10, stick='N')
             label = tkinter.Label(self.build_frame)
             label.number = i
             label.bind('<1>', self.remove_item)
             self.build.append(label)
-            slot.grid(row=row, column=column, padx=10, pady=10, stick='N')
             label.grid(row=row, column=column, padx=10, pady=10, sticky='N')
             column += 1
             if column % 3 == 0:
@@ -259,8 +261,10 @@ class SelectionWindow:  # TODO current item tree
 
 class App:
     def __init__(self):  # TODO make ref to build for champions and items from the api
+        # TODO efficiency reuse trees between windows
         self.app = tkinter.Tk()
         self.app.title("LOL Builder")
+
         self.app.withdraw()
 
         self.windows = []
@@ -271,6 +275,9 @@ class App:
         # api.get_items_squares(self.builder.items)
 
         self.app.mainloop()
+
+    def quit(self):
+        exit(0)
 
     def save_selection(self):
         if not self.current_window.builder.champion:
