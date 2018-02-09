@@ -15,7 +15,8 @@ class ItemTree:
         self.callback = window
         self.builder = window.builder
         self.build = window.build
-        self.statistics = window.statistics
+        self.statistics = window.current_statistics
+        self.photos = []
         self.items = ttk.Treeview(frame, height=4, selectmode='browse', show='tree')
         self.items['columns'] = 'Name'
         self.items_scrollbar = ttk.Scrollbar(frame, command=self.items.yview)  # TODO debug scrollbar
@@ -32,7 +33,7 @@ class ItemTree:
             if not os.path.isfile(file):
                 continue
             photo = ImageTk.PhotoImage(Image.open(file))
-            photos.append(photo)
+            self.photos.append(photo)
 
             if value['maps'][map]:
                 if modes == 'all':
@@ -78,6 +79,7 @@ class ItemTree:
             image = Image.open(file)
             photo = ImageTk.PhotoImage(image)
             photos.append(photo)
+            self.build[index].active = True
             self.build[index].configure(image=photo)
         if self.builder.champion:
             self.callback.update_stats()
@@ -138,27 +140,62 @@ class SelectionWindow:  # TODO current item tree
         self.callback = app
         self.window = tkinter.Toplevel(app.app)
         self.window.protocol("WM_DELETE_WINDOW", app.quit)
+
         self.previous_selections = []
         for window in app.windows:  # TODO items selected
             self.previous_selections.append(window.builder.champion.key)
         self.builder = build.Build()
 
-        self.champions_frame = tkinter.Frame(self.window)
-        self.splash_art_frame = tkinter.Frame(self.window)
-        self.stats_frame = tkinter.Frame(self.window)
-        self.build_frame = tkinter.Frame(self.window)
-        self.save_frame = tkinter.Frame(self.window)
+        self.message_selection_champion_frame = tkinter.Frame(self.window)
+        self.title_frame = tkinter.Frame(self.window)
+        self.message_selection_items_frame = tkinter.Frame(self.window)
+
         self.item_modes_frame = tkinter.Frame(self.window)
+
+        self.champions_frame = tkinter.Frame(self.window)
+        self.stats_base_frame = tkinter.Frame(self.window)
+        self.splash_art_frame = tkinter.Frame(self.window)
+        self.stats_current_frame = tkinter.Frame(self.window)
         self.items_frame = tkinter.Frame(self.window)
 
-        self.champions_frame.grid(row=1, column=0, rowspan=2, sticky='N')
-        self.splash_art_frame.grid(row=1, column=1, sticky='N')
-        self.stats_frame.grid(row=1, column=2, pady=20, sticky='N')
-        self.build_frame.grid(row=2, column=1)
-        self.save_frame.grid(row=2, column=2)
-        self.item_modes_frame.grid(row=0, column=3)
-        self.items_frame.grid(row=1, column=3, rowspan=2, sticky='N')
+        self.reset_frame = tkinter.Frame(self.window)
+        self.build_frame = tkinter.Frame(self.window)
+        self.save_frame = tkinter.Frame(self.window)
 
+        self.__make_frame_header()
+        self.__make_frame_body()
+        self.__make_frame_footer()
+        self.__display_frames()
+
+    def __display_frames(self):
+        self.message_selection_champion_frame.grid(row=0, column=0)
+        self.title_frame.grid(row=0, column=2)
+        self.message_selection_items_frame.grid(row=0, column=4)
+
+        self.item_modes_frame.grid(row=1, column=4)
+
+        self.champions_frame.grid(row=2, column=0)
+        self.stats_base_frame.grid(row=2, column=1)
+        self.splash_art_frame.grid(row=2, column=2)
+        self.stats_current_frame.grid(row=2, column=3)
+        self.items_frame.grid(row=2, column=4)
+
+        self.reset_frame.grid(row=3, column=0)
+        self.build_frame.grid(row=3, column=2)
+        self.save_frame.grid(row=3, column=4)
+
+    def __make_frame_header(self):
+
+        self.message_selection_champion = tkinter.Label(self.message_selection_champion_frame, text="Select your champion!")
+        self.message_selection_champion.grid()
+
+        self.title = tkinter.Label(self.title_frame, text="LOL Builder")
+        self.title.grid()
+
+        self.message_selection_items = tkinter.Label(self.message_selection_items_frame, text="Select your items!")
+        self.message_selection_items.grid()
+
+    def __make_frame_body(self):
         style = ttk.Style(self.window)
         style.configure('Treeview', rowheight=120, background='green')
 
@@ -177,13 +214,19 @@ class SelectionWindow:  # TODO current item tree
             photos.append(photo)
             self.champions.insert('', 'end', open=True, values=(value['name'], key), image=photo)
 
-        self.splash_art = tkinter.Label(self.splash_art_frame)
-        self.splash_art.grid(sticky='N')
-
-        self.statistics = {}
+        self.base_statistics = {}
         for key in gameplay.Champion('Aatrox', self.builder.champions['Aatrox']).statistics.keys():
-            label = tkinter.Label(self.stats_frame)
-            self.statistics[key] = label
+            label = tkinter.Label(self.stats_base_frame)
+            self.base_statistics[key] = label
+            label.grid(sticky='NW')
+
+        self.splash_art = tkinter.Label(self.splash_art_frame)
+        self.splash_art.grid()
+
+        self.current_statistics = {}
+        for key in gameplay.Champion('Aatrox', self.builder.champions['Aatrox']).statistics.keys():
+            label = tkinter.Label(self.stats_current_frame)
+            self.current_statistics[key] = label
             label.grid(sticky='NW')
 
         self.build = []
@@ -195,8 +238,9 @@ class SelectionWindow:  # TODO current item tree
             slot = tkinter.Label(self.build_frame, image=photo)
             slot.grid(row=row, column=column, padx=10, pady=10, stick='N')
             label = tkinter.Label(self.build_frame)
+            label.active = False
             label.number = i
-            label.bind('<1>', self.remove_item)
+            label.bind('<1>', self.cmd_remove_item)
             self.build.append(label)
             label.grid(row=row, column=column, padx=10, pady=10, sticky='N')
             column += 1
@@ -204,29 +248,48 @@ class SelectionWindow:  # TODO current item tree
                 row += 1
                 column = 0
 
-        self.save = tkinter.Button(self.save_frame, text='OK', command=self.callback.save_selection)
-        self.save.grid(sticky='NS')
-
+        self.checks = []
         self.modes = {}
         index = 0
         for stat in self.builder.tree:  # TODO make dict with actual names instead of tags
             if len(stat['tags']) == 0:
                 continue
             for tag in stat['tags']:
-                self.check = tkinter.Checkbutton(self.item_modes_frame, text=tag)
-                self.check.tag = tag
-                self.check.bind('<1>', self.update_items)
-                self.check.grid(row=int(index / 4), column=index % 4, sticky='NW')
+                check = tkinter.Checkbutton(self.item_modes_frame, text=tag)
+                check.deselect()
+                check.tag = tag
+                check.bind('<1>', self.update_items)
+                check.grid(row=int(index / 4), column=index % 4, sticky='NW')
                 self.modes[tag] = False
+                self.checks.append(check)
                 index += 1
 
         self.items = ItemTree(self, self.items_frame, '11', self.modes)
         self.items.display()
 
+    def __make_frame_footer(self):
+        self.reset = tkinter.Button(self.reset_frame, text="RESET", command=self.reset_build)
+        self.reset.grid()
+        self.save = tkinter.Button(self.save_frame, text='SAVE AND CONTINUE', command=self.callback.save_selection)
+        self.save.grid()
+
     def update_stats(self):
-        for key, value in self.builder.champion.statistics.items():  # TODO round values
+        self.update_base_stats()
+        self.update_current_stats()
+
+    def update_base_stats(self):
+        for key, value in self.builder.champion.statistics.items():
+            text = str(round(value.base_value, 2)) + ' ' + value.name
+            self.base_statistics[key].configure(text=text)
+
+    def update_current_stats(self):
+        for key, value in self.builder.champion.statistics.items():
             text = str(round(value.current_value, 2)) + ' ' + value.name
-            self.statistics[key].configure(text=text)
+            self.current_statistics[key].configure(text=text)
+
+    def remove_item(self, widget):
+        self.builder.remove_item(widget.number)
+        widget.configure(image='')
 
     def pick_champion(self, event):
         item = self.champions.identify_row(event.y)
@@ -241,11 +304,10 @@ class SelectionWindow:  # TODO current item tree
         self.items.update_item_tree()
         self.update_stats()
 
-    def remove_item(self, event):
-        self.builder.remove_item(event.widget.number)
-        event.widget.configure(image='')
+    def cmd_remove_item(self, event):
+        self.remove_item(event.widget)
         if self.builder.champion:
-            self.update_stats()
+            self.update_current_stats()
 
     def update_items(self, event):  # TODO anytime nothing is ticked => message instead displayed
         key = event.widget.tag  # TODO all button to tick
@@ -257,6 +319,14 @@ class SelectionWindow:  # TODO current item tree
         self.items.destroy()
         self.items = ItemTree(self, self.items_frame, '11', self.modes)
         self.items.display()
+
+    def reset_build(self):
+        for item in self.build:
+            if item.active:
+                self.remove_item(item)
+                item.active = False
+        if self.builder.champion:
+            self.update_current_stats()
 
 
 class App:

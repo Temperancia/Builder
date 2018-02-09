@@ -62,14 +62,8 @@ class Build:
     # app functions
 
     def set_champion(self, index):
-        reset_champion = False
-        if self.champion:
-            reset_champion = True
-
         self.champion = Champion(index, self.champions[index])
-
-        if reset_champion:
-            self.equipment.reset(self.champion)
+        self.equipment.reset(self.champion)
 
     def add_item(self, index):
         return self.equipment.add_item(Item(index, self.items[index]), self.champion)
