@@ -9,6 +9,21 @@ import gameplay
 photos = []
 
 
+def make_image(file, width=None, height=None):
+    if not os.path.isfile(file):
+        return None
+    image = Image.open(file)
+    image_width, image_height = image.size
+    if not width:
+        width = image_width
+    if not height:
+        height = image_height
+    image = image.resize((width, height), Image.ANTIALIAS)
+    photo = ImageTk.PhotoImage(image)
+    photos.append(photo)
+    return photo
+
+
 class ItemTree:
     def __init__(self, window, frame, map, modes):
         self.visible = False
@@ -17,7 +32,7 @@ class ItemTree:
         self.build = window.build
         self.statistics = window.current_statistics
         self.photos = []
-        self.items = ttk.Treeview(frame, height=4, selectmode='browse', show='tree')
+        self.items = ttk.Treeview(frame, height=3, selectmode='browse', show='tree')
         self.items['columns'] = 'Name'
         self.items_scrollbar = ttk.Scrollbar(frame, command=self.items.yview)  # TODO debug scrollbar
         self.items_scrollbar.grid(column=1, row=0, sticky='NS')
@@ -75,12 +90,8 @@ class ItemTree:
         key = self.items.item(item, 'values')[1]
         index = self.builder.add_item(key)
         if index != -1:
-            file = 'data/item_squares/' + key + '.png'
-            image = Image.open(file)
-            photo = ImageTk.PhotoImage(image)
-            photos.append(photo)
             self.build[index].active = True
-            self.build[index].configure(image=photo)
+            self.build[index].configure(image=make_image('data/item_squares/' + key + '.png'))
         if self.builder.champion:
             self.callback.update_stats()
 
@@ -89,50 +100,69 @@ class DisplayWindow:
     def __init__(self, app):
         self.callback = app
         self.window = tkinter.Toplevel(app.app)
-        self.window.protocol("WM_DELETE_WINDOW", app.quit)
+        self.window.protocol("WM_DELETE_WINDOW", app.quit)  # TODO too many frames => remove and test with less
+
+        self.logo_frame = tkinter.Frame(self.window)
+        self.logo_frame.grid(row=0, column=1)  # TODO try Label Frame for fun :D
+
         for index, window in enumerate(app.windows):
-
+            self.message_champion_name_frame = tkinter.Frame(self.window)
             self.splash_art_frame = tkinter.Frame(self.window)
-            self.stats_frame = tkinter.Frame(self.window)
             self.build_frame = tkinter.Frame(self.window)
+            self.stats_frame = tkinter.Frame(self.window)
+            self.square_frame = tkinter.Frame(self.window)
+            self.stats_comparison_frame = tkinter.Frame(self.window)
 
-            self.splash_art_frame.grid(row=0, column=index * 2, sticky='N')
-            self.stats_frame.grid(row=0, column=index * 2 + 1, pady=20, sticky='N')
-            self.build_frame.grid(row=1, column=index * 2, sticky='NS')
+            self.message_champion_name_frame.grid(row=0, column=index * 4)
+            self.splash_art_frame.grid(row=1, column=index * 4)
+            self.build_frame.grid(row=2, column=index * 4)
+            self.stats_frame.grid(row=3, column=index * 4)
+            self.square_frame.grid(row=1, column=index + 1)
+            self.stats_comparison_frame.grid(row=2, column=index + 1)
 
-            self.splash_art = tkinter.Label(self.splash_art_frame)
-            self.splash_art.grid(sticky='N')
+            message_champion_name = tkinter.Label(self.message_champion_name_frame, text=window.builder.champion.name)
+            message_champion_name.grid()
+
             file = 'data/loading_splash_arts/' + window.builder.champion.key + '.jpg'
-            image = Image.open(file)
-            image = image.resize((165, 300), Image.ANTIALIAS)
-            photo = ImageTk.PhotoImage(image)
-            photos.append(photo)
-            self.splash_art.configure(image=photo)
-
-            for key, value in window.builder.champion.statistics.items():
-                text = str(round(value.current_value, 2)) + ' ' + value.name
-                label = tkinter.Label(self.stats_frame, text=text)
-                label.grid()
+            splash_art = tkinter.Label(self.splash_art_frame, image=make_image(file, 165, 300))
+            splash_art.grid()
 
             row = 0
             column = 0
             for item in window.builder.equipment.stuff:
-                photo = ImageTk.PhotoImage(Image.open('data/Inventory_slot_background.png'))
-                photos.append(photo)
-                slot = tkinter.Label(self.build_frame, image=photo)
+                slot = tkinter.Label(self.build_frame, image=make_image('data/Inventory_slot_background.png'))
                 slot.grid(row=row, column=column, padx=10, pady=10, stick='N')
-
                 if item:
                     file = 'data/item_squares/' + item.key + '.png'
-                    image = Image.open(file)
-                    photo = ImageTk.PhotoImage(image)
-                    photos.append(photo)
-                    label = tkinter.Label(self.build_frame, image=photo)
+                    label = tkinter.Label(self.build_frame, image=make_image(file))
                     label.grid(row=row, column=column, padx=10, pady=10, sticky='N')
                 column += 1
                 if column % 3 == 0:
                     row += 1
                     column = 0
+
+            champion = 1
+            if index == 1:
+                champion = 0
+            other_stats = app.windows[champion].builder.champion.statistics
+            for key, value in window.builder.champion.statistics.items():
+                text = str(round(value.current_value, 2)) + ' ' + value.name
+                label = tkinter.Label(self.stats_frame, text=text)
+                label.grid()
+
+                result = value.current_value - other_stats[key].current_value
+                text = str(round(result, 2)) + ' ' + value.name
+                if result > 0:
+                    text = '+' + text
+                if result < 0:
+                    label = tkinter.Label(self.stats_comparison_frame, text=text, fg='red')
+                elif result > 0:
+                    label = tkinter.Label(self.stats_comparison_frame, text=text, fg='green')
+                label.grid()
+
+            file = 'data/champion_squares/' + window.builder.champion.key + '.png'
+            square = tkinter.Label(self.square_frame, image=make_image(file))
+            square.grid()
 
 
 class SelectionWindow:  # TODO current item tree
@@ -159,8 +189,8 @@ class SelectionWindow:  # TODO current item tree
         self.items_frame = tkinter.Frame(self.window)
 
         self.reset_frame = tkinter.Frame(self.window)
-        self.build_frame = tkinter.Frame(self.window)
-        self.save_frame = tkinter.Frame(self.window)
+        self.build_frame = tkinter.Frame(self.window, relief='ridge', bg='yellow')
+        self.save_frame = tkinter.Frame(self.window, relief='ridge', bg='yellow')
 
         self.__make_frame_header()
         self.__make_frame_body()
@@ -186,11 +216,20 @@ class SelectionWindow:  # TODO current item tree
 
     def __make_frame_header(self):
 
-        self.message_selection_champion = tkinter.Label(self.message_selection_champion_frame, text="Select your champion!")
+        self.message_selection_champion = tkinter.Label(  # TODO border color ??
+            self.message_selection_champion_frame,
+            text='Select your champion!',
+            background='green',
+            borderwidth=2,
+            highlightcolor='green',
+            highlightbackground='green',
+            highlightthickness=10,
+            relief='solid'
+        )
         self.message_selection_champion.grid()
 
-        self.title = tkinter.Label(self.title_frame, text="LOL Builder")
-        self.title.grid()
+        self.logo = tkinter.Label(self.title_frame, image=make_image('data/logo.jpg', 100, 100))
+        self.logo.grid()
 
         self.message_selection_items = tkinter.Label(self.message_selection_items_frame, text="Select your items!")
         self.message_selection_items.grid()
@@ -199,7 +238,7 @@ class SelectionWindow:  # TODO current item tree
         style = ttk.Style(self.window)
         style.configure('Treeview', rowheight=120, background='green')
 
-        self.champions = ttk.Treeview(self.champions_frame, height=4, selectmode='browse', show='tree')
+        self.champions = ttk.Treeview(self.champions_frame, height=3, selectmode='browse', show='tree')
         self.champions['columns'] = 'Name'
         scrollbar = ttk.Scrollbar(self.champions_frame, command=self.champions.yview)
         scrollbar.grid(column=1, row=0, sticky='NS')
@@ -208,11 +247,12 @@ class SelectionWindow:  # TODO current item tree
         self.champions.bind('<1>', self.pick_champion)
         for key, value in self.builder.champions.items():
             file = 'data/champion_squares/' + key + '.png'
-            if not os.path.isfile(file) or key in self.previous_selections:
+            if key in self.previous_selections:
                 continue
-            photo = ImageTk.PhotoImage(Image.open(file))
-            photos.append(photo)
-            self.champions.insert('', 'end', open=True, values=(value['name'], key), image=photo)
+            image = make_image(file)
+            if not image:
+                continue
+            self.champions.insert('', 'end', open=True, values=(value['name'], key), image=image)
 
         self.base_statistics = {}
         for key in gameplay.Champion('Aatrox', self.builder.champions['Aatrox']).statistics.keys():
@@ -220,7 +260,7 @@ class SelectionWindow:  # TODO current item tree
             self.base_statistics[key] = label
             label.grid(sticky='NW')
 
-        self.splash_art = tkinter.Label(self.splash_art_frame)
+        self.splash_art = tkinter.Label(self.splash_art_frame, image=make_image('data/question_mark.png', 300, 300))
         self.splash_art.grid()
 
         self.current_statistics = {}
@@ -233,9 +273,7 @@ class SelectionWindow:  # TODO current item tree
         row = 0
         column = 0
         for i in range(6):
-            photo = ImageTk.PhotoImage(Image.open('data/Inventory_slot_background.png'))
-            photos.append(photo)
-            slot = tkinter.Label(self.build_frame, image=photo)
+            slot = tkinter.Label(self.build_frame, image=make_image('data/Inventory_slot_background.png'))
             slot.grid(row=row, column=column, padx=10, pady=10, stick='N')
             label = tkinter.Label(self.build_frame)
             label.active = False
@@ -248,28 +286,56 @@ class SelectionWindow:  # TODO current item tree
                 row += 1
                 column = 0
 
+        self.tags_mapping = {
+            'GOLDPER': 'Gold per seconde',
+            'CONSUMABLE': 'Consumable',
+            'VISION': 'Vision',
+            'HEALTH': 'Health',
+            'HEALTHREGEN': 'Health regen',
+            'ARMOR': 'Armor',
+            'SPELLBLOCK': 'Magic resist',
+            'LIFESTEAL': 'Life steal',
+            'CRITICALSTRIKE': 'Critical strike',
+            'ATTACKSPEED': 'Attack speed',
+            'DAMAGE': 'Damage',
+            'MANA': 'Mana',
+            'SPELLDAMAGE': 'Spell damage',
+            'COOLDOWNREDUCTION': 'Cooldown reduction',
+            'SPELLVAMP': 'Spell vamp',
+            'MAGICPENETRATION': 'Magic penetration',
+            'ARMORPENETRATION': 'Armor penetration',
+            'TRINKET': 'Trinket',
+            'TENACITY': 'Tenacity'
+        }
         self.checks = []
         self.modes = {}
         index = 0
-        for stat in self.builder.tree:  # TODO make dict with actual names instead of tags
+        for stat in self.builder.tree:
             if len(stat['tags']) == 0:
                 continue
             for tag in stat['tags']:
-                check = tkinter.Checkbutton(self.item_modes_frame, text=tag)
-                check.deselect()
-                check.tag = tag
-                check.bind('<1>', self.update_items)
-                check.grid(row=int(index / 4), column=index % 4, sticky='NW')
-                self.modes[tag] = False
-                self.checks.append(check)
-                index += 1
+                if tag in self.tags_mapping:
+                    check = tkinter.Checkbutton(self.item_modes_frame, text=self.tags_mapping[tag])
+                    check.deselect()
+                    check.tag = tag
+                    check.bind('<1>', self.update_items)
+                    check.grid(row=int(index / 4), column=index % 4, sticky='NW')
+                    self.modes[tag] = False
+                    self.checks.append(check)
+                    index += 1
 
         self.items = ItemTree(self, self.items_frame, '11', self.modes)
         self.items.display()
 
     def __make_frame_footer(self):
-        self.reset = tkinter.Button(self.reset_frame, text="RESET", command=self.reset_build)
+        #self.reset_frame, text = 'RESET', command = self.reset_build)
+        self.reset = tkinter.Button(self.reset_frame,
+                                    image=make_image('data/refresh.png'),
+                                    command=self.reset_build,
+                                    relief='flat'
+                                    )
         self.reset.grid()
+
         self.save = tkinter.Button(self.save_frame, text='SAVE AND CONTINUE', command=self.callback.save_selection)
         self.save.grid()
 
@@ -285,6 +351,8 @@ class SelectionWindow:  # TODO current item tree
     def update_current_stats(self):
         for key, value in self.builder.champion.statistics.items():
             text = str(round(value.current_value, 2)) + ' ' + value.name
+            text += ' (' + str(round(value.current_value - value.base_value, 2)) + ')'
+
             self.current_statistics[key].configure(text=text)
 
     def remove_item(self, widget):
@@ -296,11 +364,7 @@ class SelectionWindow:  # TODO current item tree
         key = self.champions.item(item, 'values')[1]
         self.builder.set_champion(key)
         file = 'data/loading_splash_arts/' + key + '.jpg'
-        image = Image.open(file)
-        image = image.resize((165, 300), Image.ANTIALIAS)
-        photo = ImageTk.PhotoImage(image)
-        photos.append(photo)
-        self.splash_art.configure(image=photo)
+        self.splash_art.configure(image=make_image(file, 165, 300))
         self.items.update_item_tree()
         self.update_stats()
 
@@ -333,6 +397,7 @@ class App:
     def __init__(self):  # TODO make ref to build for champions and items from the api
         # TODO efficiency reuse trees between windows
         self.app = tkinter.Tk()
+        self.app.tk_setPalette(background='grey')  # TODO invisible checkboxes from this
         self.app.title("LOL Builder")
 
         self.app.withdraw()
