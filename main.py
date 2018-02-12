@@ -1,9 +1,4 @@
-import app
-
-
-def greetings():
-    print("Hello toxic player.")
-
+import app2
 
 if __name__ == '__main__':
-    app = app.App()
+    app2.App()

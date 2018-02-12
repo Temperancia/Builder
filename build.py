@@ -10,6 +10,7 @@ class Build:
 
         self.champions = api.get_champions()
         self.items, self.tree = api.get_items()
+        self.gold = 0
 
     @staticmethod
     def display_choice(choices):
@@ -66,7 +67,12 @@ class Build:
         self.equipment.reset(self.champion)
 
     def add_item(self, index):
-        return self.equipment.add_item(Item(index, self.items[index]), self.champion)
+        item = Item(index, self.items[index])
+        self.gold += item.gold
+        return self.equipment.add_item(item, self.champion)
 
     def remove_item(self, index):
+        item = self.equipment.stuff[index]
+        if item:
+            self.gold -= item.gold
         self.equipment.remove_item(index, self.champion)
