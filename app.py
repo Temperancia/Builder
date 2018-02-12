@@ -94,6 +94,7 @@ class ItemTree:
             self.build[index].configure(image=make_image('data/item_squares/' + key + '.png'))
         if self.builder.champion:
             self.callback.update_stats()
+        self.callback.gold.configure(text=str(self.builder.gold) + ' gold')
 
 
 class DisplayWindow:
@@ -190,7 +191,9 @@ class SelectionWindow:  # TODO current item tree
 
         self.reset_frame = tkinter.Frame(self.window)
         self.build_frame = tkinter.Frame(self.window, relief='ridge', bg='yellow')
-        self.save_frame = tkinter.Frame(self.window, relief='ridge', bg='yellow')
+        self.save_frame = tkinter.Frame(self.window)
+
+        self.gold_frame = tkinter.Frame(self.window)
 
         self.__make_frame_header()
         self.__make_frame_body()
@@ -202,17 +205,18 @@ class SelectionWindow:  # TODO current item tree
         self.title_frame.grid(row=0, column=2)
         self.message_selection_items_frame.grid(row=0, column=4)
 
-        self.item_modes_frame.grid(row=1, column=4)
+        self.item_modes_frame.grid(row=1, column=3)
 
-        self.champions_frame.grid(row=2, column=0)
+        self.champions_frame.grid(row=1, column=0)
         self.stats_base_frame.grid(row=2, column=1)
-        self.splash_art_frame.grid(row=2, column=2)
+        self.splash_art_frame.grid(row=1, column=2)
         self.stats_current_frame.grid(row=2, column=3)
-        self.items_frame.grid(row=2, column=4)
+        self.items_frame.grid(row=1, column=4)
 
-        self.reset_frame.grid(row=3, column=0)
-        self.build_frame.grid(row=3, column=2)
-        self.save_frame.grid(row=3, column=4)
+        self.reset_frame.grid(row=2, column=0)
+        self.build_frame.grid(row=2, column=2)
+        self.save_frame.grid(row=2, column=4)
+        self.gold_frame.grid(row=3, column=2)
 
     def __make_frame_header(self):
 
@@ -319,7 +323,7 @@ class SelectionWindow:  # TODO current item tree
                     check.deselect()
                     check.tag = tag
                     check.bind('<1>', self.update_items)
-                    check.grid(row=int(index / 4), column=index % 4, sticky='NW')
+                    check.grid(row=int(index / 2), column=index % 2, sticky='NW')
                     self.modes[tag] = False
                     self.checks.append(check)
                     index += 1
@@ -328,7 +332,6 @@ class SelectionWindow:  # TODO current item tree
         self.items.display()
 
     def __make_frame_footer(self):
-        #self.reset_frame, text = 'RESET', command = self.reset_build)
         self.reset = tkinter.Button(self.reset_frame,
                                     image=make_image('data/refresh.png'),
                                     command=self.reset_build,
@@ -338,6 +341,9 @@ class SelectionWindow:  # TODO current item tree
 
         self.save = tkinter.Button(self.save_frame, text='SAVE AND CONTINUE', command=self.callback.save_selection)
         self.save.grid()
+
+        self.gold = tkinter.Label(self.gold_frame, text=str(self.builder.gold) + ' gold')
+        self.gold.grid()
 
     def update_stats(self):
         self.update_base_stats()
@@ -372,6 +378,7 @@ class SelectionWindow:  # TODO current item tree
         self.remove_item(event.widget)
         if self.builder.champion:
             self.update_current_stats()
+        self.gold.configure(text=str(self.builder.gold) + ' gold')
 
     def update_items(self, event):  # TODO anytime nothing is ticked => message instead displayed
         key = event.widget.tag  # TODO all button to tick
@@ -391,6 +398,7 @@ class SelectionWindow:  # TODO current item tree
                 item.active = False
         if self.builder.champion:
             self.update_current_stats()
+        self.gold.configure(text=str(self.builder.gold) + ' gold')
 
 
 class App:

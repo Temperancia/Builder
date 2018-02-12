@@ -131,6 +131,7 @@ class Item:
         self.name = item['name']
         self.stats = item['stats']
         self.parse(item['description'])
+        self.gold = item['gold']['total']
 
     def parse(self, description):  # hp regen same issue
         found = description.find('Base Mana Regen')
