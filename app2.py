@@ -5,34 +5,40 @@ import os
 builder = build.Build()
 
 
-class ChampionList(wx.ListCtrl):
-    def __init__(self, parent, id):
-        wx.ListCtrl.__init__(self, parent, id,
+class List(wx.ListCtrl):
+    def __init__(self, parent, pos, size, item_size, path):
+        wx.ListCtrl.__init__(self, parent,
                              style=wx.LC_ICON | wx.BORDER_NONE | wx.LC_NO_HEADER,
-                             pos=(0, 100),
-                             size=(800, 400)
+                             pos=pos,
+                             size=size
                              )
-        BMP_SIZE = 120
-        self.il = wx.ImageList(BMP_SIZE, BMP_SIZE)
+        self.il = wx.ImageList(item_size, item_size)
 
         self.imglistdict = {}
         for key, value in builder.champions.items():
-            file = 'data/champion_squares/' + key + '.png'
+            file = path + key + '.png'
             if not os.path.isfile(file):
                 continue
             image = wx.Image(file, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
-            self.imglistdict[value['name'].lower()] = self.il.Add(image)
+            name = value['name'].lower()
+            self.imglistdict[name] = {'image': self.il.Add(image), 'keywords': name.split(' ')}
         self.SetImageList(self.il, wx.IMAGE_LIST_NORMAL)
 
-        self.populate_list(all=True)
+        self.populate_list()
 
-    def populate_list(self, name=None, all=False):  # awkward ambivalent function called to populate the list
-        if name:
-            name = name.lower()
+    def populate_list(self, selection=None):
+        if selection:
+            selection = selection.lower()
         self.ClearAll()
-        for index, (key, value) in enumerate(self.imglistdict.items()):  # key is the name of champ , value its graphical representation and index just the place it will get
-            if all or key.startswith(name):  # if ahri starts with 'a'
-                self.InsertItem(index, value)
+        for index, (key, value) in enumerate(self.imglistdict.items()):
+            if not selection or key.startswith(selection) \
+                    or True in map(lambda word: word.startswith(selection), value['keywords']):
+                self.InsertItem(index, value['image'])
+
+
+class ChampionList(List):
+    def __init__(self, parent, pos, size):
+        super().__init__(parent, pos, size, 120, 'data/champion_squares/')
 
 
 class ChampionFrame(wx.Frame):
@@ -49,7 +55,7 @@ class ChampionFrame(wx.Frame):
     def __init_ui(self):
         self.text = wx.TextCtrl(self)  # makes input line for selection
         self.Bind(wx.EVT_TEXT, self.change_list)  # binds any text input to change list func
-        self.list = ChampionList(self, -1)  # creates the actual list
+        self.list = ChampionList(self, (0, 0), (400, 400))  # creates the actual list
 
 
 class MDIFrame(wx.MDIParentFrame):
