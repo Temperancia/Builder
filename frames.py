@@ -46,10 +46,10 @@ class MDIFrame(wx.Frame):
 
     def __init_ui(self):
         menu = wx.Menu()
-        menu.Append(1, "&New Window")
-        menu.Append(2, "&Exit")
+        menu.Append(1, '&New Window')
+        menu.Append(2, '&Exit')
         menu_bar = wx.MenuBar()
-        menu_bar.Append(menu, "&File")
+        menu_bar.Append(menu, '&File')
         self.SetMenuBar(menu_bar)
         self.Bind(wx.EVT_MENU, self.on_new_champion, id=1)
         self.Bind(wx.EVT_MENU, self.on_exit, id=2)

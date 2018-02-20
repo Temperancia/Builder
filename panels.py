@@ -72,7 +72,7 @@ class DisplaySelectionPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
         self.parent = parent
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer = wx.GridSizer(rows=4, cols=2, hgap=5, vgap=5)
         self.sizer.AddSpacer(10)
 
         image = make_image(
@@ -105,18 +105,11 @@ class DisplaySelectionPanel(wx.Panel):
         self.champion_image.SetBitmap(image)
 
 
-        
-        file = 'data/item_squares/' + self.parent.selections[0]['items'][0] + '.png'
-        image = make_image(file=file, width=84, height=84, mask='data/inventory_slot_background.png')
-        self.items[0].SetBitmap(image)
 
-        file = 'data/item_squares/' + self.parent.selections[0]['items'][1] + '.png'
-        image = make_image(file=file, width=84, height=84, mask='data/inventory_slot_background.png')
-        self.items[1].SetBitmap(image)
-
-        file = 'data/item_squares/' + self.parent.selections[0]['items'][2] + '.png'
-        image = make_image(file=file, width=84, height=84, mask='data/inventory_slot_background.png')
-        self.items[2].SetBitmap(image)
+        for index, item in enumerate(self.parent.selections[0]['items']):
+            file = 'data/item_squares/' + item + '.png'
+            image = make_image(file=file, width=84, height=84, mask='data/inventory_slot_background.png')
+            self.items[index].SetBitmap(image)
 
         self.Layout()
 
