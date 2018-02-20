@@ -22,8 +22,8 @@ class ChampionFrame(wx.Frame):
         button.Bind(wx.EVT_BUTTON, self.on_save)
 
         self.sizer.AddMany([
-            (self.champion_panel, 1, wx.GROW),
-            (self.item_panel, 1, wx.GROW),
+            (self.champion_panel, 1, wx.EXPAND),
+            (self.item_panel, 1, wx.EXPAND),
             (button, 1, wx.TOP | wx.RIGHT, 10)
         ])
         self.SetSizerAndFit(self.sizer)
@@ -37,9 +37,9 @@ class ChampionFrame(wx.Frame):
         self.parent.callback_new_champion()
 
 
-class MDIFrame(wx.MDIParentFrame):
+class MDIFrame(wx.Frame):
     def __init__(self):
-        wx.MDIParentFrame.__init__(self, None, title='LOL Builder', size=(1000, 700))
+        wx.Frame.__init__(self, None, title='LOL Builder', size=(1000, 700))
         self.selections = []
         self.current_selection = None
         self.__init_ui()
@@ -60,7 +60,7 @@ class MDIFrame(wx.MDIParentFrame):
         self.selection_panel = DisplaySelectionPanel(self)
 
         self.sizer.AddMany([
-            (self.selection_panel, 1, wx.GROW),
+            (self.selection_panel, 1, wx.EXPAND)
         ])
         self.SetSizerAndFit(self.sizer)
 

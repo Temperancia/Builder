@@ -7,8 +7,10 @@ class ChampionSelectionPanel(wx.Panel):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         #self.sizer.AddSpacer(10)
 
-        image = make_image(file='data/question_mark.png', width=229, height=400, mask='data/inventory_slot_background.png')
-        #image = make_image(file='data/question_mark.png', mask='data/inventory_slot_background.png')
+        image = make_image(
+            file='data/question_mark2.png',
+            mask='data/inventory_slot_background.png'
+        )
         self.champion_image = wx.StaticBitmap(self, bitmap=image)
 
         self.champion_text = wx.TextCtrl(self, style=wx.TE_CENTRE)
@@ -73,31 +75,37 @@ class DisplaySelectionPanel(wx.Panel):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.AddSpacer(10)
 
-        image = make_image(file='data/question_mark.png', width=100, height=300, mask='data/inventory_slot_background.png')
+        image = make_image(
+            file='data/question_mark2.png',
+            width=100,
+            height=300,
+            mask='data/inventory_slot_background.png'
+        )
         self.champion_image = wx.StaticBitmap(self, bitmap=image)
 
-        image = make_image('data/inventory_slot_background.png', 84, 84)
+        image2 = make_image('data/inventory_slot_background.png', 84, 84)
         self.items = [
-            ItemBitmap(self, bitmap=image),
-            ItemBitmap(self, bitmap=image),
-            ItemBitmap(self, bitmap=image)
+            ItemBitmap(self, bitmap=image2),
+            ItemBitmap(self, bitmap=image2),
+            ItemBitmap(self, bitmap=image2)
         ]
 
         self.sizer.AddMany([
-            (self.champion_image, 2, wx.ALIGN_CENTRE),
-            (self.items[0], 2, wx.ALIGN_CENTRE),
-            (self.items[1], 2, wx.ALIGN_CENTRE),
-            (self.items[2], 2, wx.ALIGN_CENTRE),
+            (self.champion_image, 1, wx.ALIGN_CENTRE),
+            (self.items[0], 1, wx.ALIGN_CENTRE),
+            (self.items[1], 1, wx.ALIGN_CENTRE),
+            (self.items[2], 1, wx.ALIGN_CENTRE),
         ])
         self.sizer.SetSizeHints(self)
         self.SetSizer(self.sizer)
-        self.Show()
 
     def on_new_selection(self):
         file = 'data/loading_splash_arts/' + self.parent.selections[0]['champion'] + '.jpg'
         image = make_image(file=file, width=100, height=300, mask='data/inventory_slot_background.png')
         self.champion_image.SetBitmap(image)
 
+
+        
         file = 'data/item_squares/' + self.parent.selections[0]['items'][0] + '.png'
         image = make_image(file=file, width=84, height=84, mask='data/inventory_slot_background.png')
         self.items[0].SetBitmap(image)
@@ -109,3 +117,6 @@ class DisplaySelectionPanel(wx.Panel):
         file = 'data/item_squares/' + self.parent.selections[0]['items'][2] + '.png'
         image = make_image(file=file, width=84, height=84, mask='data/inventory_slot_background.png')
         self.items[2].SetBitmap(image)
+
+        self.Layout()
+
