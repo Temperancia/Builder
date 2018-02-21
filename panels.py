@@ -72,44 +72,59 @@ class DisplaySelectionPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
         self.parent = parent
-        self.sizer = wx.GridSizer(rows=4, cols=2, hgap=5, vgap=5)
-        self.sizer.AddSpacer(10)
+        self.sizer = wx.GridSizer(rows=8, cols=5, hgap=2, vgap=2)
 
-        image = make_image(
+        champion_image = make_image(
             file='data/question_mark2.png',
-            width=100,
-            height=300,
+            width=50,
+            height=150,
             mask='data/inventory_slot_background.png'
         )
-        self.champion_image = wx.StaticBitmap(self, bitmap=image)
+        item_image = make_image(
+            file='data/inventory_slot_background.png',
+            width=52,
+            height=52,
+            mask='data/inventory_slot_background.png'
+        )
+        self.selected = [[False, False, False, False, False], [False, False, False, False, False]]
+        self.images = []
+        for row in range(8):
+            self.images.append([])
+            if row % 4 == 0:
+                for column in range(5):
+                    image = wx.StaticBitmap(self, bitmap=champion_image)
+                    self.images[row].append(image)
+                    self.sizer.Add(image, 1, wx.ALIGN_CENTRE)
+            else:
+                for column in range(5):
+                    image = ItemBitmap(self, bitmap=item_image)
+                    self.images[row].append(image)
+                    self.sizer.Add(image, 1, wx.ALIGN_CENTRE)
 
-        image2 = make_image('data/inventory_slot_background.png', 84, 84)
-        self.items = [
-            ItemBitmap(self, bitmap=image2),
-            ItemBitmap(self, bitmap=image2),
-            ItemBitmap(self, bitmap=image2)
-        ]
-
-        self.sizer.AddMany([
-            (self.champion_image, 1, wx.ALIGN_CENTRE),
-            (self.items[0], 1, wx.ALIGN_CENTRE),
-            (self.items[1], 1, wx.ALIGN_CENTRE),
-            (self.items[2], 1, wx.ALIGN_CENTRE),
-        ])
         self.sizer.SetSizeHints(self)
         self.SetSizer(self.sizer)
 
     def on_new_selection(self):
-        file = 'data/loading_splash_arts/' + self.parent.selections[0]['champion'] + '.jpg'
-        image = make_image(file=file, width=100, height=300, mask='data/inventory_slot_background.png')
-        self.champion_image.SetBitmap(image)
+        champion = 0
+        for index, selected in enumerate(self.selected[0]):
+            if not selected:
+                champion = index
+                self.selected[0][index] = True
+                break
+        file = 'data/loading_splash_arts/' + self.parent.selections[champion]['champion'] + '.jpg'
+        image = make_image(file=file, width=50, height=150, mask='data/inventory_slot_background.png')
+        self.images[0][champion].SetBitmap(image)
+        for index, key in enumerate(self.parent.selections[champion]['items']):
+            file = 'data/item_squares/' +  key + '.png'
+            image = make_image(file=file, width=52, height=52, mask='data/inventory_slot_background.png')
+            self.images[index + 1][champion].SetBitmap(image)
 
-
-
-        for index, item in enumerate(self.parent.selections[0]['items']):
-            file = 'data/item_squares/' + item + '.png'
-            image = make_image(file=file, width=84, height=84, mask='data/inventory_slot_background.png')
-            self.items[index].SetBitmap(image)
+        return
+        for image in self.images[0]:
+            for index, item in enumerate(self.parent.selections[0]['items']):
+                file = 'data/item_squares/' + item + '.png'
+                image = make_image(file=file, width=52, height=52, mask='data/inventory_slot_background.png')
+                item_set[index].SetBitmap(image)
 
         self.Layout()
 
